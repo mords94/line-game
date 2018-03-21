@@ -1,5 +1,11 @@
 let canvas = $('canvas')[0];
 const context = canvas.getContext('2d');
+const requestAnimationFrame = window.requestAnimationFrame ||
+    window.mozRequestAnimationFrame ||
+    window.webkitRequestAnimationFrame ||
+    window.msRequestAnimationFrame;
+
+
 
 (function () {
     const GRID_WIDTH = 100;
@@ -7,7 +13,7 @@ const context = canvas.getContext('2d');
     const BALL_SIZE = 8;
     const DEGREE_RANDOM_THRESHOLD = 90;
     const DEGREE_RANDOM_DISPERSION = 30;
-    const GAME_SPEED = 30;
+    const GAME_SPEED = 3;
     const CURSOR_WIDTH = 15;
     const CURSOR_HEIGHT = 20;
     const PATH_WIDTH = 1;
@@ -53,31 +59,21 @@ const context = canvas.getContext('2d');
         drawPath();
         drawCursor();
         drawBalls();
-    /*
-         context.beginPath();
-         context.strokeStyle = "white";
-         context.moveTo(100, 100);
-         context.lineTo(300,500);
-         context.moveTo(400, 100);
-         context.lineTo(50,40);
-
-         context.closePath();
-         */
-        moveBalls(1);
+        moveBalls(GAME_SPEED);
 
         if (cursorMove) {
-            moveCursor(1);
+            moveCursor(GAME_SPEED);
         }
 
+
+        requestAnimationFrame(refresh);
     }
 
     function init() {
         createOneBall();
         polygon = [];
         createCursor(BORDER, BORDER);
-        gameInstance = setInterval(() => {
-            refresh();
-        }, GAME_SPEED < 1 ? 1 : 1000 * (1 / GAME_SPEED));
+
     }
 
     function drawPolygons() {

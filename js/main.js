@@ -1,10 +1,13 @@
+let canvas = $('canvas')[0];
+const context = canvas.getContext('2d');
+
 (function () {
     const GRID_WIDTH = 100;
     const GRID_HEIGHT = 100;
     const BALL_SIZE = 8;
     const DEGREE_RANDOM_THRESHOLD = 90;
     const DEGREE_RANDOM_DISPERSION = 30;
-    const GAME_SPEED = 300;
+    const GAME_SPEED = 30;
     const CURSOR_WIDTH = 15;
     const CURSOR_HEIGHT = 20;
     const PATH_WIDTH = 1;
@@ -26,8 +29,7 @@
         points: []
     };
     let cursorMove = false;
-    let canvas = $('canvas')[0];
-    const context = canvas.getContext('2d');
+
 
 
     window.addEventListener('resize', resizeCanvas, false);
@@ -51,7 +53,7 @@
         drawPath();
         drawCursor();
         drawBalls();
-        /*
+    /*
          context.beginPath();
          context.strokeStyle = "white";
          context.moveTo(100, 100);
@@ -70,7 +72,7 @@
     }
 
     function init() {
-        //createOneBall();
+        createOneBall();
         polygon = [];
         createCursor(BORDER, BORDER);
         gameInstance = setInterval(() => {
@@ -79,10 +81,9 @@
     }
 
     function drawPolygons() {
-        context.globalCompositeOperation = 'source-over';
 
-        context.beginPath();
         polygons.forEach(polygon => {
+            context.beginPath();
             if (polygon.length > 0) {
                 context.moveTo(polygon[0].x, polygon[0].y);
             }
@@ -90,7 +91,11 @@
                 if (index !== 0) {
                     context.lineTo(point.x, point.y);
                 }
-            })
+            });
+
+            context.fillStyle = 'blue';
+            context.fill();
+            context.closePath();
         });
         /*
          polygons.forEach((point, index) => {
@@ -101,9 +106,6 @@
          }
          });
          */
-        context.fillStyle = 'blue';
-        context.fill();
-        context.closePath();
     }
 
     function onKeyDown(event) {
@@ -177,6 +179,9 @@
         if (isOnBorder(translatedCenter.x, translatedCenter.y)) {
             if (!outside) {
                 savePoint({x: translatedCenter.x, y: translatedCenter.y});
+
+
+                completePolygon();
                 polygons.push(polygon);
                 polygon = [];
             }
@@ -188,11 +193,13 @@
             outside = false;
         }
 
-        if(intersectBigPolygon(translatedCenter)) {
-            savePoint({x: translatedCenter.x, y: translatedCenter.y});
-            polygons.push(polygon);
-            polygon = [];
-        }
+        // if(intersectBigPolygon(translatedCenter)) {
+        //     savePoint({x: translatedCenter.x, y: translatedCenter.y});
+        //     console.log("INTERSECTBG", cursor.x, cursor.y, context.getImageData(cursor.x, cursor.y, 1,1).data);
+        //     completePolygon();
+        //     polygons.push(polygon);
+        //     polygon = [];
+        // }
 
 
         const points = cursor.points.map(point => {
@@ -208,6 +215,22 @@
 
         console.log(polygon, gameInstance);
 
+    }
+
+    function completePolygon() {
+        const pointCount = polygon.length;
+        const last = polygon[pointCount-1];
+        const first = polygon[0];
+
+        if(pointCount === 2||(pointCount % 2 !== 0 && pointCount > 2)) {
+            if(last.x === BORDER || last.x === getWindow().x - BORDER) {
+                savePoint({x: last.x, y: last.y > getWindow().y / 2 ? getWindow().y - BORDER : BORDER});
+                savePoint({x: first.x, y: last.y > getWindow().y / 2 ? getWindow().y - BORDER : BORDER});
+            } else {
+                savePoint({x: last.x > getWindow().x / 2 ? getWindow().x - BORDER : BORDER, y: last.y});
+                savePoint({x: last.x > getWindow().x / 2 ? getWindow().x - BORDER : BORDER, y: first.y});
+            }
+        }
     }
 
     function intersectPolygon(segment) {
@@ -288,11 +311,7 @@
 
     }
 
-    function sortPolygonPoints() {
-        polygons.sort((a, b) => {
-            return a.x - b.x;
-        });
-    }
+    const sortPolygonPoints = (polygon) => polygon.sort((a, b) => a.x - b.x);
 
 
     function isOut(x, y) {
